@@ -20,7 +20,7 @@ interpreter = tf.lite.Interpreter(model_path="disease_detection_model_quantized.
 interpreter.allocate_tensors()
 
 # Define class names based on your model
-class_names = ["melanoma", "basal_cell_carcinoma"]
+class_names = ["Algal", "Blight"]
 
 @app.route('/test', methods=['GET'])
 def test():
