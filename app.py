@@ -20,39 +20,55 @@ interpreter.allocate_tensors()
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        logger.info("Received prediction request")
-        image_data = request.json.get('image')
-        if not image_data:
-            return jsonify({"error": "No image data provided"}), 400
+try:
+    # Get the image from the request
+    data = request.json
+    if not data or 'image' not in data:
+        return jsonify({'error': 'No image data provided'}), 400
+    
+    # Log that we received data
+    print("Received image data, processing...")
+    
+    # Extract the base64 image
+    image_data = data['image']
+    if 'base64' not in image_data:
+        return jsonify({'error': 'Invalid image format'}), 400
+    
+    # Remove the data URL prefix (e.g., data:image/jpeg;base64,)
+    base64_str = image_data.split('base64,')[1]
+    
+    # Decode the image
+    img_bytes = base64.b64decode(base64_str)
+    img = Image.open(BytesIO(img_bytes))
+    
+    # Preprocess the image for the model
+    img = img.resize((224, 224))
+    img_array = np.array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Make prediction
+    print("Running model prediction...")
+    predictions = model.predict(img_array)
+    
+    # Process results
+    results = []
+    for i, prob in enumerate(predictions[0]):
+        results.append({
+            'className': class_names[i],
+            'probability': float(prob)
+        })
+    
+    # Sort by probability
+    results.sort(key=lambda x: x['probability'], reverse=True)
+    
+    print("Prediction complete, returning results")
+    return jsonify({'predictions': results})
 
-        # Decode base64 image
-        image_bytes = base64.b64decode(image_data.split(',')[1])
-        image = Image.open(io.BytesIO(image_bytes)).resize((224, 224))
-        image_array = np.array(image, dtype=np.float32) / 255.0
-        image_array = np.expand_dims(image_array, axis=0)
-
-        # Run inference
-        input_details = interpreter.get_input_details()
-        output_details = interpreter.get_output_details()
-
-        interpreter.set_tensor(input_details[0]['index'], image_array)
-        interpreter.invoke()
-
-        output_data = interpreter.get_tensor(output_details[0]['index'])
-        results = output_data[0].tolist()
-
-        # Map to class names (adjust based on your model)
-        class_names = ["test1", "rest2"]
-        predictions = [{"className": class_names[i], "probability": float(results[i])} 
-                       for i in range(len(class_names))]
-        predictions.sort(key=lambda x: x["probability"], reverse=True)
-
-        return jsonify({"predictions": predictions})
-
-    except Exception as e:
-        logger.error(f"Error during prediction: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+except Exception as e:
+    print(f"Error during prediction: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
