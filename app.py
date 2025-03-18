@@ -1,12 +1,13 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import numpy as np
 import tensorflow as tf
-import base64
+import numpy as np
 from PIL import Image
 import io
+import base64
 import logging
+import os
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +21,7 @@ interpreter = tf.lite.Interpreter(model_path="disease_detection_model_quantized.
 interpreter.allocate_tensors()
 
 # Define class names based on your model
-class_names = ["test", "test2"]
+class_names = ["melanoma", "basal_cell_carcinoma"]
 
 @app.route('/test', methods=['GET'])
 def test():
