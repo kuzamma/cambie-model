@@ -71,18 +71,13 @@ def predict():
             logger.error(f"Error during inference: {str(e)}")
             return jsonify({"error": f"Error during inference: {str(e)}"}), 500
 
-        # Map to class names and get the top prediction
+        # Map to class names
         predictions = [{"className": class_names[i], "probability": float(results[i])} 
                       for i in range(min(len(class_names), len(results)))]
         predictions.sort(key=lambda x: x["probability"], reverse=True)
         
-        # Return only the top prediction
-        top_prediction = predictions[0] if predictions else None
-        if not top_prediction:
-            return jsonify({"error": "No predictions available"}), 400
-        
-        logger.info(f"Returning top prediction: {top_prediction}")
-        return jsonify({"prediction": top_prediction})  # Return a single prediction
+        logger.info(f"Returning predictions: {predictions}")
+        return jsonify({"predictions": predictions})
 
     except Exception as e:
         logger.error(f"Unexpected error during prediction: {str(e)}")
