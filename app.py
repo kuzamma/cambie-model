@@ -21,7 +21,7 @@ interpreter = tf.lite.Interpreter(model_path="model_unquan.tflite")
 interpreter.allocate_tensors()
 
 # Define class names based on your model
-class_names = ["Algal", "Blight"]
+class_names = ["Algal", "Blight", "Unrecognized"]
 
 # --------------------------
 # 🧠 Train Isolation Forest for Anomaly Detection
