@@ -6,4 +6,4 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: MODEL_PATH
-        value: model.tflite
+        value: model_unquan.tflite
