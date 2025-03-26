@@ -7,6 +7,7 @@ import io
 import base64
 import logging
 import os
+from sklearn.ensemble import IsolationForest
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -22,15 +23,39 @@ interpreter.allocate_tensors()
 # Define class names based on your model
 class_names = ["Algal", "Blight"]
 
+# --------------------------
+# 🧠 Train Isolation Forest for Anomaly Detection
+# --------------------------
+# Load known leaf disease images and preprocess them
+# Replace with actual image loading and processing
+X_train = np.random.rand(100, 224, 224, 3)  # Placeholder for training data
+X_train_flattened = X_train.reshape(X_train.shape[0], -1)
+
+# Train Isolation Forest
+iso_forest = IsolationForest(contamination=0.05, random_state=42)
+iso_forest.fit(X_train_flattened)
+logger.info("Isolation Forest trained for anomaly detection")
+
+# --------------------------
+# 🧩 Anomaly Detection Function
+# --------------------------
+def detect_anomaly_iso(input_img):
+    input_flattened = input_img.reshape(1, -1)
+    prediction = iso_forest.predict(input_flattened)
+    if prediction[0] == -1:
+        logger.info("Anomaly detected: Input not recognized")
+        return True
+    return False
+
 @app.route('/test', methods=['GET'])
 def test():
-    return "API is working!"  # Fixed indentation
+    return "API is working!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         logger.info("Received prediction request")
-        image_data = request.json.get('image')  # Fixed variable name
+        image_data = request.json.get('image')
         if not image_data:
             logger.error("No image data provided")
             return jsonify({"error": "No image data provided"}), 400
@@ -53,6 +78,12 @@ def predict():
             logger.error(f"Error processing image: {str(e)}")
             return jsonify({"error": f"Error processing image: {str(e)}"}), 400
 
+        # --------------------------
+        # 🚨 Anomaly Detection Check
+        # --------------------------
+        if detect_anomaly_iso(image_array):
+            return jsonify({"message": "Not recognized", "predictions": []})
+
         # Run inference
         try:
             input_details = interpreter.get_input_details()
@@ -74,6 +105,7 @@ def predict():
         # Map to class names
         predictions = [{"className": class_names[i], "probability": float(results[i])} 
                       for i in range(min(len(class_names), len(results)))]
+
         predictions.sort(key=lambda x: x["probability"], reverse=True)
         
         logger.info(f"Returning predictions: {predictions}")
