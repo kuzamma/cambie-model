@@ -17,7 +17,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Load the TFLite model
-interpreter = tf.lite.Interpreter(model_path="model_unquan.tflite")
+interpreter = tf.lite.Interpreter(model_path="model_unquant.tflite")
 interpreter.allocate_tensors()
 
 # Define class names based on your model
