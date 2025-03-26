@@ -6,4 +6,4 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: MODEL_PATH
-        value: disease_detection_model_quantized.tflite
+        value: model.tflite
