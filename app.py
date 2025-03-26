@@ -20,7 +20,7 @@ interpreter = tf.lite.Interpreter(model_path="model_unquant.tflite")
 interpreter.allocate_tensors()
 
 # Define class names based on your model
-class_names = ["Algal", "Blight"]
+class_names = ["Algal", "Blight", "Notrecognized"]
 
 @app.route('/test', methods=['GET'])
 def test():
